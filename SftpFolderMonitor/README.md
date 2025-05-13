@@ -18,24 +18,39 @@ The application is configured using the `appsettings.json` file. Below is an exa
 
 ```json
 {
-  "Monitor": {
-    "Folders": {
-      "C:\\WatchFolder1": "/remote/path1",
-      "C:\\WatchFolder2": "/remote/path2",
-      "D:\\AnotherFolder": "/archive"
-    }
-  },
-  "Sftp": {
-    "Host": "sftp.example.com",
-    "Port": 22,
-    "Username": "sftpuser",
-    "SshKeyPath": "C:\\Keys\\id_rsa"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information"
-    }
-  }
+   "Monitor": {
+      "Folders": {
+         "\\sftp\\uploads1": "uploads",
+         "\\sftp\\uploads2": "uploads"
+      },
+      "Root": "D:"
+   },
+   "Sftp": {
+      "Host": "20.2.8.54",
+      "Port": 22,
+      "Username": "sftpuser",
+      "Password": "",
+      "SshKeyPath": "D:\\sftp\\sftp_key",
+      "AuthenticationMethod": "privateKey"
+   },
+   "Serilog": {
+      "MinimumLevel": "Information",
+      "WriteTo": [
+         {
+            "Name": "Console"
+         },
+         {
+            "Name": "File",
+            "Args": {
+               "path": "Logs\\service.log",
+               "rollingInterval": "Day"
+            }
+         }
+      ],
+      "Enrich": [
+         "FromLogContext"
+      ]
+   }
 }
 ```
 
