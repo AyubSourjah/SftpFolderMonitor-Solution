@@ -65,9 +65,36 @@ The application is configured using the `appsettings.json` file. Below is an exa
    - `Port`: SFTP server port (default is 22).
    - `Username`: SFTP username.
    - `SshKeyPath`: Path to the private SSH key for authentication.
+   - `AuthenticationMethod`: Method of authentication (e.g., `privateKey`, `key`).
 
 3. **Logging**  
-   Configures the logging level for the application.
+   Configures the logging level and output for the application. Below is an example configuration:
+
+   ```json
+   "Serilog": {
+     "MinimumLevel": "Information",
+     "WriteTo": [
+       {
+         "Name": "Console"
+       },
+       {
+         "Name": "File",
+         "Args": {
+           "path": "Logs\\service.log",
+           "rollingInterval": "Day"
+         }
+       }
+     ],
+     "Enrich": [
+       "FromLogContext"
+     ]
+   }
+   
+- MinimumLevel: Specifies the minimum log level (e.g., Information).
+- WriteTo: Defines the log outputs:
+- Console: Logs to the console.
+- File: Logs to a file with a rolling interval of one day.
+- Enrich: Adds additional context to log entries (e.g., FromLogContext).
 
 ## How It Works
 
