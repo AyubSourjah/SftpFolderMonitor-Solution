@@ -57,3 +57,4 @@
 /home/ayub/Trunk/GitProjects/SftpFolderMonitor-Solution/SftpFolderMonitor/bin/Debug/net9.0/Serilog.Sinks.Console.dll
 /home/ayub/Trunk/GitProjects/SftpFolderMonitor-Solution/SftpFolderMonitor/bin/Debug/net9.0/Serilog.Sinks.Debug.dll
 /home/ayub/Trunk/GitProjects/SftpFolderMonitor-Solution/SftpFolderMonitor/bin/Debug/net9.0/Serilog.Sinks.File.dll
+/home/ayub/Trunk/GitProjects/SftpFolderMonitor-Solution/SftpFolderMonitor/obj/Debug/net9.0/SftpFolderMonitor.sourcelink.json

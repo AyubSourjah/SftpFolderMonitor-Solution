@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("hSenid Business Solutions")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("9.0.5.5")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b30054d096334eff88b03f611e5a9141726e1e37")]
 [assembly: System.Reflection.AssemblyProductAttribute("Sftp Folder Monitor Sync")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SftpFolderMonitor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("9.0.5.5")]
