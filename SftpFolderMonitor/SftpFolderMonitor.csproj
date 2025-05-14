@@ -9,6 +9,8 @@
         <Product>Sftp Folder Monitor Sync</Product>
         <AssemblyVersion>9.0.5.5</AssemblyVersion>
         <FileVersion>9.0.5.5</FileVersion>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>SftpFolderMonitor.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
     <ItemGroup>
