@@ -27,35 +27,35 @@ public class Worker : BackgroundService
         foreach (var (localFolder, remoteFolder) in mappings)
         {
             var fullPath = string.Concat(_configuration["Monitor:Root"], localFolder);
-            
+
             if (string.IsNullOrWhiteSpace(fullPath) || string.IsNullOrWhiteSpace(remoteFolder))
             {
                 Log.Warning("Invalid folder mapping: LocalFolder or RemoteFolder is null or empty.");
                 continue;
             }
-    
+
             if (!Directory.Exists(fullPath))
             {
                 Log.Warning("Local folder does not exist: {LocalFolder}", fullPath);
                 continue;
             }
-    
+
             var watcher = new FileSystemWatcher(fullPath)
             {
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size,
                 Filter = "*.*",
                 EnableRaisingEvents = true
             };
-    
-            watcher.Created += (s, e) =>
+
+            watcher.Created += (_, e) =>
                 Task.Run(() => ProcessFile(e.FullPath, remoteFolder), cancellationToken);
-    
+
             _watchers.Add(watcher);
-            
-            Log.Information("Monitoring {LocalFolder} -> {RemoteFolder}", 
+
+            Log.Information("Monitoring {LocalFolder} -> {RemoteFolder}",
                 fullPath, remoteFolder);
         }
-    
+
         return base.StartAsync(cancellationToken);
     }
 
@@ -93,8 +93,9 @@ public class Worker : BackgroundService
 
                 Log.Information("Transfer complete: {FilePath}", filePath);
             }
-            else Log.Information("SFTP was not initialized. File {FilePath} was not transferred.", 
-                filePath);
+            else
+                Log.Information("SFTP was not initialized. File {FilePath} was not transferred.",
+                    filePath);
         }
         catch (Exception ex)
         {
