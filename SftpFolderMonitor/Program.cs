@@ -1,28 +1,37 @@
 using SftpFolderMonitor;
 using Serilog;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .Build();
+var builder = Host.CreateDefaultBuilder(args);
 
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(configuration)
-    .Enrich.FromLogContext()
-    .CreateLogger();
+builder.ConfigureAppConfiguration((context, config) =>
+{
+    config.SetBasePath(AppContext.BaseDirectory)
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+});
+
+builder.UseSerilog((context, services, configuration) =>
+{
+    configuration.ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext();
+});
+
+builder.ConfigureServices((hostContext, services) =>
+{
+    // Configuration validation
+    var sftpConfig = hostContext.Configuration.GetSection("Sftp").Get<SftpConfig>();
+    if (sftpConfig != null)
+    {
+        sftpConfig.Validate();
+        services.AddSingleton(sftpConfig);
+    }
+
+    services.AddHostedService<Worker>();
+});
 
 try
 {
     Log.Information("Starting service");
-    var host = Host.CreateDefaultBuilder(args)
-        .UseSerilog()
-        .ConfigureServices((hostContext, services) =>
-        {
-            services.AddHostedService<Worker>();
-            services.AddSingleton<IConfiguration>(configuration);
-        })
-        .Build();
-
+    var host = builder.Build();
     await host.RunAsync();
 }
 catch (Exception ex)
