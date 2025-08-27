@@ -1,5 +1,6 @@
 using SftpFolderMonitor;
 using Serilog;
+using SftpFolderMonitor.Contracts;
 
 var builder = Host.CreateDefaultBuilder(args);
 
@@ -24,7 +25,9 @@ builder.ConfigureServices((hostContext, services) =>
         sftpConfig.Validate();
         services.AddSingleton(sftpConfig);
     }
-
+    
+    services.AddSingleton<IFileMonitorService, FileMonitorService>();
+    services.AddSingleton<ISftpService, SftpService>();
     services.AddHostedService<Worker>();
 });
 
