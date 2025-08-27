@@ -199,3 +199,16 @@ The application uses Serilog for structured logging with:
 - Fatal: Service startup failures
 
 Log files are stored in the Logs directory with daily rolling.
+
+## Software Engineering Practices
+This codebase follows several key software engineering principles:
+- **Dependency Injection**: Services (`IFileMonitorService`, `ISftpService`) are registered and injected via constructors, promoting loose coupling and testability.
+- **Separation of Concerns**: Each class has a distinct responsibility (monitoring files, handling SFTP uploads, orchestrating workflow).
+- **Interface-Based Design**: Contracts are defined via interfaces, allowing for flexible implementations and easier mocking in tests.
+- **Single Responsibility Principle (SRP)**: Each class (e.g., `FileMonitorService`, `SftpService`, `Worker`) handles one main concern.
+- **Resource Management**: Implements `IDisposable` for classes managing unmanaged resources (`FileSystemWatcher`, SFTP connections).
+- **Configuration via External Files**: Uses `appsettings.json` for configuration, supporting environment-specific settings.
+- **Event-Driven Architecture**: Uses events (`FileDetected`) to decouple file detection from file processing/upload logic.
+- **Logging and Error Handling**: Integrates structured logging and exception handling for observability and reliability.
+
+These principles contribute to maintainability, extensibility, and robustness.
