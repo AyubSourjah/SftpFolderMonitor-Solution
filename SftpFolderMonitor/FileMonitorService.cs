@@ -28,12 +28,15 @@ public class FileMonitorService(ILogger<FileMonitorService> logger) : IFileMonit
 
             var watcher = new FileSystemWatcher(fullPath)
             {
-                NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite,
                 Filter = "*.*",
                 EnableRaisingEvents = true
             };
 
             watcher.Created += (_, e) =>
+                Task.Run(() => OnFileDetected(e.FullPath, remoteFolder, cancellationToken), cancellationToken);
+
+            watcher.Changed += (_, e) =>
                 Task.Run(() => OnFileDetected(e.FullPath, remoteFolder, cancellationToken), cancellationToken);
 
             _watchers.Add(watcher);

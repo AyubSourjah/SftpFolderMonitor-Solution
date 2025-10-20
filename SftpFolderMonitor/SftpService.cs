@@ -20,7 +20,7 @@ public class SftpService(SftpConfig config, ILogger<SftpService> logger) : ISftp
             {
                 using var fileStream = new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var remotePath = Path.Combine(remoteFolder, Path.GetFileName(localFilePath)).Replace("\\", "/");
-                client.UploadFile(fileStream, remotePath);
+                client.UploadFile(fileStream, remotePath, true);
             }, cancellationToken);
 
             logger.LogInformation("Successfully uploaded {FilePath} to {RemotePath}", localFilePath, remoteFolder);
