@@ -36,12 +36,21 @@ try
     Log.Information("Starting service");
     var host = builder.Build();
     await host.RunAsync();
+    Environment.ExitCode = (int)ExitCodes.Success;
 }
 catch (Exception ex)
 {
     Log.Fatal(ex, "Service terminated unexpectedly");
+    Environment.ExitCode = (int)ExitCodes.UnhandledException;
 }
 finally
 {
     Log.CloseAndFlush();
+}
+
+public enum ExitCodes : int
+{
+    Success = 0,
+    UnhandledException = 1,
+    ConfigurationError = 2
 }
