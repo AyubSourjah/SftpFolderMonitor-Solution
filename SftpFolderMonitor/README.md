@@ -13,6 +13,7 @@ The SFTP Folder Monitor is a .NET Core Windows Service application designed to m
 - Structured logging with Serilog to console and file
 - Runs as a background service with proper lifecycle management
 - Comprehensive error handling and validation
+- Built-in upload retry: up to 3 attempts with a configurable delay between retries (default 3 seconds)
 
 ## Architecture
 
@@ -41,7 +42,8 @@ The application is configured using the `appsettings.json` file. Below is an exa
     "Username": "sftpuser",
     "Password": "",
     "SshKeyPath": "D:\\sftp\\sftp_key",
-    "AuthenticationMethod": "privateKey"
+    "AuthenticationMethod": "privateKey",
+    "UploadRetryDelaySeconds": 3
   },
   "Serilog": {
     "MinimumLevel": "Information",
@@ -77,6 +79,7 @@ Sftp
 - **Password:** Password for authentication (required for password auth)
 - **SshKeyPath:** Path to SSH private key file (required for privateKey auth)
 - **AuthenticationMethod:** Authentication method ("password" or "privateKey")
+- **UploadRetryDelaySeconds:** Delay (in seconds) to wait between upload retry attempts (default: `3`). Uploads are attempted up to 3 times.
 
 Serilog
 Configures structured logging:
@@ -103,12 +106,25 @@ Configures structured logging:
   - Uploads file to corresponding remote directory
   - Maintains original filename in remote location
   - Handles connection lifecycle (connect/disconnect per upload)
+  - On transient failures, retries upload up to 3 times, waiting `Sftp.UploadRetryDelaySeconds` between attempts; connection is reset before each retry to ensure a clean reconnect
   
 
 - **Error Handling & Logging**
   - Comprehensive error logging with structured data
   - Validation of configuration on startup
   - Graceful handling of missing directories and connection failures
+  - During retries: logs warnings with attempt count and wait time; logs an error after the final failed attempt
+
+### Retry Mechanism
+
+The uploader uses a simple built-in retry policy for reliability:
+
+- Attempts: 3 total (initial try + up to 2 retries)
+- Delay between attempts: `Sftp.UploadRetryDelaySeconds` (default 3 seconds)
+- Cancellation: If the `CancellationToken` is signaled, the operation stops immediately and is not retried
+- Connection hygiene: The SFTP client is disposed and recreated between attempts to recover from broken connections
+
+You can adjust the delay in `appsettings.json`. If the key is omitted, the default of 3 seconds is used.
 
 ## Service Registration
 The application uses dependency injection with the following service registrations:
@@ -188,14 +204,14 @@ Password Authentication
 ### Custom File Processing
 - Modify FileMonitorService.OnFileDetected for custom file handling
 - Implement file filtering or transformation before upload
-- Add retry mechanisms or queue-based processing
+- Tune retry behavior (e.g., change delay) or introduce advanced backoff strategies/queue-based processing
 
 ### Logging
 The application uses Serilog for structured logging with:
 
 - Information: Normal operations, file uploads, monitoring status
-- Warning: Non-critical issues like missing directories
-- Error: Upload failures, connection issues
+- Warning: Non-critical issues like missing directories; retry attempts with wait durations
+- Error: Upload failures after max retries, connection issues
 - Fatal: Service startup failures
 
 Log files are stored in the Logs directory with daily rolling.

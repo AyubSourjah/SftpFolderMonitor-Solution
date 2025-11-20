@@ -20,6 +20,11 @@ public class SftpConfig
     [Required]
     public string AuthenticationMethod { get; init; } = "password";
 
+    // Delay (in seconds) between upload retries. Defaults to 3 seconds.
+    // This value can be configured via appsettings under section "Sftp:UploadRetryDelaySeconds".
+    [Range(0, int.MaxValue)]
+    public int UploadRetryDelaySeconds { get; init; } = 3;
+
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Host))

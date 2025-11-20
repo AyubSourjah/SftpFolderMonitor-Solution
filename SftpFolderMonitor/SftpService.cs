@@ -12,35 +12,78 @@ public class SftpService(SftpConfig config, ILogger<SftpService> logger) : ISftp
 
     public async Task UploadFileAsync(string localFilePath, string remoteFolder, CancellationToken cancellationToken)
     {
-        try
-        {
-            var client = await EnsureConnectedAsync(cancellationToken);
+        const int maxAttempts = 3;
+        var delay = TimeSpan.FromSeconds(Math.Max(0, _config.UploadRetryDelaySeconds));
 
-            await Task.Run(() =>
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
             {
-                using var fileStream = new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var remotePath = Path.Combine(remoteFolder, Path.GetFileName(localFilePath)).Replace("\\", "/");
-                client.UploadFile(fileStream, remotePath, true);
-            }, cancellationToken);
+                var client = await EnsureConnectedAsync(cancellationToken);
 
-            logger.LogInformation("Successfully uploaded {FilePath} to {RemotePath}", localFilePath, remoteFolder);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to upload {FilePath} to {RemoteFolder}", localFilePath, remoteFolder);
-            throw;
+                await Task.Run(() =>
+                {
+                    using var fileStream =
+                        new FileStream(localFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    var remotePath = Path.Combine(remoteFolder, Path.GetFileName(localFilePath)).Replace("\\", "/");
+                    client.UploadFile(fileStream, remotePath, true);
+                }, cancellationToken);
+
+                logger.LogInformation("Successfully uploaded {FilePath} to {RemotePath}", localFilePath, remoteFolder);
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                // Respect cancellation and do not retry
+                logger.LogWarning(
+                    "Upload of {FilePath} to {RemoteFolder} was canceled during attempt {Attempt}/{MaxAttempts}",
+                    localFilePath, remoteFolder, attempt, maxAttempts);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                var isLast = attempt == maxAttempts;
+                if (isLast)
+                {
+                    logger.LogError(ex, "Failed to upload {FilePath} to {RemoteFolder} after {Attempts} attempts",
+                        localFilePath, remoteFolder, maxAttempts);
+                    throw;
+                }
+
+                logger.LogWarning(ex,
+                    "Attempt {Attempt}/{MaxAttempts} to upload {FilePath} to {RemoteFolder} failed. Retrying in {DelaySeconds}s...",
+                    attempt, maxAttempts, localFilePath, remoteFolder, (int)delay.TotalSeconds);
+
+                // Reset the client to force clean reconnect on next attempt
+                try
+                {
+                    _client?.Dispose();
+                }
+                catch
+                {
+                    // ignore dispose errors
+                }
+                finally
+                {
+                    _client = null;
+                }
+
+                await Task.Delay(delay, cancellationToken);
+            }
         }
     }
 
     private async Task<SftpClient> EnsureConnectedAsync(CancellationToken cancellationToken)
     {
         await _connectionSemaphore.WaitAsync(cancellationToken);
-        
+
         try
         {
             if (_client is { IsConnected: true }) return _client;
             _client?.Dispose();
-            
+
             var connection = CreateConnection();
             _client = new SftpClient(connection);
             await Task.Run(() => _client.Connect(), cancellationToken);
